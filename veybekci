@@ -1,0 +1,63 @@
+#!/bin/bash
+
+# simple cdx search automation for a list of domains. you can increase the sleep delay if you too many domains(e.g 200+)
+
+banner='
+                   __         __        _ 
+ _   _____  __  __/ /_  ___  / /_______(_)
+| | / / _ \/ / / / __ \/ _ \/ //_/ ___/ / 
+| |/ /  __/ /_/ / /_/ /  __/ ,< / /__/ /  
+|___/\___/\__, /_.___/\___/_/|_|\___/_/   
+         /____/                           
+
+			by @leitfader v1.0
+'
+
+while IFS= read -r line; do
+    printf "%s\n" "$line"
+    sleep 0.03
+done <<< "$banner"
+
+
+DOMAIN_LIST="domains.txt"
+
+if [[ ! -f "$DOMAIN_LIST" ]]; then
+    echo "File $DOMAIN_LIST not found!"
+    exit 1
+fi
+
+spinner=(⠋ ⠙ ⠹ ⠸ ⠼ ⠴ ⠦ ⠧ ⠇ ⠏)
+spin_i=0
+
+echo
+echo "Crawling through the archives..."
+echo
+
+while IFS= read -r DOMAIN; do
+    OUTPUT_FILE="${DOMAIN}.txt"
+
+    curl --silent --show-error -G "https://web.archive.org/cdx/search/cdx" \
+        --data-urlencode "url=${DOMAIN}/*" \
+        --data-urlencode "collapse=urlkey" \
+        --data-urlencode "output=text" \
+        --data-urlencode "fl=original" \
+        > "$OUTPUT_FILE" &
+
+    CURL_PID=$!
+
+    while kill -0 "$CURL_PID" 2>/dev/null; do
+        printf "\r%s Fetching: %s " "${spinner[spin_i]}" "$DOMAIN"
+        spin_i=$(( (spin_i + 1) % ${#spinner[@]} ))
+        sleep 0.1
+    done
+
+    wait "$CURL_PID"
+
+    printf "\r✔ Done: %s → %s\n" "$DOMAIN" "$OUTPUT_FILE"
+    sleep 7
+done < "$DOMAIN_LIST"
+
+echo
+echo "All domains processed. Found urls saved."
+sleep 2
+clear
