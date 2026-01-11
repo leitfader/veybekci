@@ -12,7 +12,7 @@ example.org
 ## Installation
 Download the script and make it executable:
 ```bash
-curl -fsSL https://example.com/veybekci -o veybekci && chmod +x veybekci
+curl -fsSL https://raw.githubusercontent.com/leitfader/veybekci/refs/heads/main/veybekci -o veybekci && chmod +x veybekci
 ```
 
 ## Disclaimer
